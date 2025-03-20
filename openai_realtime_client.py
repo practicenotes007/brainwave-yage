@@ -189,7 +189,7 @@ class AliyunRealtimeAudioTextClient:
             commit_message = json.dumps({
                 "header": {
                     "name": "speech.transcriber",
-                    "status": "complete"
+                    "status": "end"  # 修改：将"complete"改为"end"，符合阿里云要求的结束状态
                 }
             })
             await self.ws.send(commit_message)
@@ -224,8 +224,7 @@ class AliyunRealtimeAudioTextClient:
                         "enable_intermediate_result": True,
                         "format": "pcm",
                         "sample_rate": 16000,
-                        "domain": "general",
-                        "instructions": instructions
+                        "domain": "general"
                     }
                 }
             })
