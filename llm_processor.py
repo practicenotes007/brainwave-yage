@@ -98,7 +98,7 @@ class GPTProcessor(LLMProcessor):
 大模型服务为 DeepSeek，具体实现
 '''
 class DeepSeekProcessor(LLMProcessor):
-    def __init__(self, default_model: str = 'deepseek/gpt'):
+    def __init__(self, default_model: str = 'deepseek-chat'):
         self.default_model = default_model
         self.api_key = os.getenv("DEEPSEEK_API_KEY")
         if not self.api_key:

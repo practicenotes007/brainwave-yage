@@ -63,7 +63,7 @@ if not ALIYUN_APP_KEY:
     raise EnvironmentError("ALIYUN_APP_KEY is not set.")
 
 # Initialize with a default model
-llm_processor = get_llm_processor("gpt-4o")  # Default processor
+llm_processor = get_llm_processor("deepseek-chat")  # Default processor
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
