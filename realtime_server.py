@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 import uvicorn
 import logging
 from prompts import PROMPTS
-from openai_realtime_client import OpenAIRealtimeAudioTextClient
+from openai_realtime_client import OpenAIRealtimeAudioTextClient, AliyunRealtimeAudioTextClient
 from starlette.websockets import WebSocketState
 import wave
 import datetime
@@ -62,6 +62,9 @@ async def get_realtime_page(request: Request):
     return FileResponse("static/realtime.html")
 
 class AudioProcessor:
+    '''
+    target_sample_rate: OpenAI 24kHz; Aliyun 16kHz
+    '''
     def __init__(self, target_sample_rate=24000):
         self.target_sample_rate = target_sample_rate
         self.source_sample_rate = 48000  # Most common sample rate for microphones
@@ -105,7 +108,7 @@ async def websocket_endpoint(websocket: WebSocket):
     }))
     
     client = None
-    audio_processor = AudioProcessor()
+    audio_processor = AudioProcessor(16000) # Aliyun 16kHz
     audio_buffer = []
     recording_stopped = asyncio.Event()
     openai_ready = asyncio.Event()
@@ -117,7 +120,8 @@ async def websocket_endpoint(websocket: WebSocket):
             # Clear the ready flag while initializing
             openai_ready.clear()
             
-            client = OpenAIRealtimeAudioTextClient(os.getenv("OPENAI_API_KEY"))
+            #client = OpenAIRealtimeAudioTextClient(os.getenv("OPENAI_API_KEY")) # use OPENAPI
+            client  = AliyunRealtimeAudioTextClient(os.getenv("ALIYUN_API_KEY"), os.getenv("ALIYUN_APP_KEY")) # use Aliyun
             await client.connect()
             logger.info("Successfully connected to OpenAI client")
             

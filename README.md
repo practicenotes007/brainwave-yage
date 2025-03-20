@@ -87,6 +87,8 @@ Deploying **Brainwave** involves setting up a Python-based environment, installi
 
 5. **Configure Environment Variables**
 
+   [Option-1]
+
    Brainwave requires the OpenAI API key to function. Set the `OPENAI_API_KEY` environment variable:
 
    - **On macOS/Linux:**
@@ -104,7 +106,32 @@ Deploying **Brainwave** involves setting up a Python-based environment, installi
    - **On Windows (PowerShell):**
 
      ```powershell
-     $env:OPENAI_API_KEY="your-openai-api-key"
+     $env:OPENAI_API_KEY="your-openai-api-key" 
+     ```
+
+   [Option-2] 
+   
+   Brainwave + Aliyun TTS/STT and Deepseek. Set the `DEEPSEEK_API_KEY` and `ALIYUN_API_KEY` environment variables:
+
+   - **On macOS/Linux:**
+
+     ```bash
+     export DEEPSEEK_API_KEY='your-deepseek-api-key'
+     export ALIYUN_API_KEY='your-aliyun-api-key'
+     ```
+
+   - **On Windows (Command Prompt):**
+
+     ```cmd
+     set DEEPSEEK_API_KEY=your-deepseek-api-key
+     set ALIYUN_API_KEY=your-aliyun-api-key
+     ```
+
+   - **On Windows (PowerShell):**
+
+     ```powershell
+     $env:DEEPSEEK_API_KEY="your-deepseek-api-key"
+     $env:ALIYUN_API_KEY="your-aliyun-api-key" 
      ```
 
 6. **Launch the Server**

@@ -9,6 +9,9 @@ import asyncio
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+'''
+OpenAI的实时语音转文本服务
+'''
 class OpenAIRealtimeAudioTextClient:
     def __init__(self, api_key: str, model: str = "gpt-4o-realtime-preview"):
         self.api_key = api_key
@@ -126,6 +129,142 @@ class OpenAIRealtimeAudioTextClient:
         if self.ws:
             await self.ws.close()
             logger.info("Closed OpenAI WebSocket connection")
+        if self.receive_task:
+            self.receive_task.cancel()
+            try:
+                await self.receive_task
+            except asyncio.CancelledError:
+                pass
+
+
+'''
+阿里云的实时语音转文本服务，示例代码
+'''
+class AliyunRealtimeAudioTextClient:
+    def __init__(self, api_key: str, app_key: str):
+        self.api_key = api_key
+        self.app_key = app_key
+        self.ws = None
+        self.session_id = None
+        self.base_url = "wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1"
+        self.last_audio_time = None 
+        self.auto_commit_interval = 5
+        self.receive_task = None
+        self.handlers: Dict[str, Callable[[dict], asyncio.Future]] = {}
+        self.queue = asyncio.Queue()
+
+    async def connect(self):
+        url = f"{self.base_url}?appkey={self.app_key}"
+        self.ws = await websockets.connect(url)
+        await self.send_start_request()
+
+    async def send_start_request(self):
+        request = {
+            "header": {
+                "app_key": self.app_key,
+                "status": "start"
+            },
+            "parameter": {
+                "speech_transcriber": {
+                    "enable_intermediate_result": True,
+                    "format": "pcm",
+                    "sample_rate": 16000,
+                    "domain": "general"
+                }
+            }
+        }
+        await self.ws.send(json.dumps(request))
+        logger.info("Sent start request to Aliyun")
+
+    async def send_audio(self, audio_data: bytes):
+        if self.ws and self.ws.open:
+            await self.ws.send(audio_data)
+            logger.info("Sent audio data to Aliyun")
+        else:
+            logger.error("WebSocket is not open. Cannot send audio.")
+
+    async def commit_audio(self):
+        """Commit the audio buffer and notify Aliyun"""
+        if self.ws and self.ws.open:
+            commit_message = json.dumps({
+                "header": {
+                    "name": "speech.transcriber",
+                    "status": "complete"
+                }
+            })
+            await self.ws.send(commit_message)
+            logger.info("Sent commit message to Aliyun")
+        else:
+            logger.error("WebSocket is not open. Cannot commit audio.")
+
+    async def clear_audio_buffer(self):
+        """Clear the audio buffer"""
+        if self.ws and self.ws.open:
+            clear_message = json.dumps({
+                "header": {
+                    "name": "speech.transcriber",
+                    "status": "cancel"
+                }
+            })
+            await self.ws.send(clear_message)
+            logger.info("Sent clear message to Aliyun")
+        else:
+            logger.error("WebSocket is not open. Cannot clear audio buffer.")
+
+    async def start_response(self, instructions: str):
+        """Start a new response with given instructions"""
+        if self.ws and self.ws.open:
+            start_message = json.dumps({
+                "header": {
+                    "name": "speech.transcriber",
+                    "status": "start"
+                },
+                "parameter": {
+                    "speech_transcriber": {
+                        "enable_intermediate_result": True,
+                        "format": "pcm",
+                        "sample_rate": 16000,
+                        "domain": "general",
+                        "instructions": instructions
+                    }
+                }
+            })
+            await self.ws.send(start_message)
+            logger.info(f"Started response with instructions: {instructions}")
+        else:
+            logger.error("WebSocket is not open. Cannot start response.")
+
+    def register_handler(self, message_type: str, handler: Callable[[dict], asyncio.Future]):
+        self.handlers[message_type] = handler
+
+    async def default_handler(self, data: dict):
+        message_type = data.get("type", "unknown")
+        logger.warning(f"Unhandled message type received from Aliyun: {message_type}")
+
+    async def receive_messages(self):
+        try:
+            async for message in self.ws:
+                data = json.loads(message)
+                message_type = data.get("header", {}).get("name", "default")
+                handler = self.handlers.get(message_type, self.handlers.get("default"))
+                if handler:
+                    await handler(data)
+                else:
+                    logger.warning(f"No handler for message type: {message_type}")
+        except websockets.exceptions.ConnectionClosed as e:
+            logger.error(f"Aliyun WebSocket connection closed: {e}")
+        except Exception as e:
+            logger.error(f"Error in receive_messages: {e}", exc_info=True)
+
+    async def connect_and_receive(self):
+        await self.connect()
+        self.receive_task = asyncio.create_task(self.receive_messages())
+ 
+    async def close(self):
+        """Close the WebSocket connection"""
+        if self.ws:
+            await self.ws.close()
+            logger.info("Closed Aliyun WebSocket connection")
         if self.receive_task:
             self.receive_task.cancel()
             try:
