@@ -129,8 +129,13 @@ function updateConnectionStatus(status) {
 function initializeWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(`${protocol}://${window.location.host}/api/v1/ws`);
+
+    console.info('initializeWebSocket: ', protocol);
+    console.info('initializeWebSocket: ', window.location.host);
     
     ws.onopen = () => {
+
+        console.info('initializeWebSocket: onopen');
         wsConnected = true;
         updateConnectionStatus(true);
         if (autoStart && !isRecording && !isAutoStarted) startRecording();
@@ -138,6 +143,7 @@ function initializeWebSocket() {
     
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        console.info('initializeWebSocket, onmessage: ', data);
         switch (data.type) {
             case 'status':
                 updateConnectionStatus(data.status);
@@ -162,6 +168,7 @@ function initializeWebSocket() {
     };
     
     ws.onclose = () => {
+        console.info('initializeWebSocket, onclose');
         wsConnected = false;
         updateConnectionStatus(false);
         setTimeout(initializeWebSocket, 1000);
