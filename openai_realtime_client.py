@@ -5,6 +5,8 @@ import logging
 import time
 from typing import Optional, Callable, Dict, List
 import asyncio
+from aliyunsdkcore.client import AcsClient
+from aliyunsdkcore.request import CommonRequest
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -161,7 +163,8 @@ class AliyunRealtimeAudioTextClient:
     async def send_start_request(self):
         request = {
             "header": {
-                "app_key": self.app_key,
+                "request": "IAT+STT",
+                "appkey": self.app_key,
                 "status": "start"
             },
             "parameter": {
@@ -184,12 +187,12 @@ class AliyunRealtimeAudioTextClient:
             logger.error("WebSocket is not open. Cannot send audio.")
 
     async def commit_audio(self):
-        """Commit the audio buffer and notify Aliyun"""
         if self.ws and self.ws.open:
             commit_message = json.dumps({
                 "header": {
-                    "name": "speech.transcriber",
-                    "status": "end"  # 修改：将"complete"改为"end"，符合阿里云要求的结束状态
+                    "request": "IAT+STT",
+                    "appkey": self.app_key,
+                    "status": "end"
                 }
             })
             await self.ws.send(commit_message)
@@ -198,11 +201,11 @@ class AliyunRealtimeAudioTextClient:
             logger.error("WebSocket is not open. Cannot commit audio.")
 
     async def clear_audio_buffer(self):
-        """Clear the audio buffer"""
         if self.ws and self.ws.open:
             clear_message = json.dumps({
                 "header": {
-                    "name": "speech.transcriber",
+                    "request": "IAT+STT",
+                    "appkey": self.app_key,
                     "status": "cancel"
                 }
             })
@@ -210,28 +213,6 @@ class AliyunRealtimeAudioTextClient:
             logger.info("Sent clear message to Aliyun")
         else:
             logger.error("WebSocket is not open. Cannot clear audio buffer.")
-
-    async def start_response(self, instructions: str):
-        """Start a new response with given instructions"""
-        if self.ws and self.ws.open:
-            start_message = json.dumps({
-                "header": {
-                    "name": "speech.transcriber",
-                    "status": "start"
-                },
-                "parameter": {
-                    "speech_transcriber": {
-                        "enable_intermediate_result": True,
-                        "format": "pcm",
-                        "sample_rate": 16000,
-                        "domain": "general"
-                    }
-                }
-            })
-            await self.ws.send(start_message)
-            logger.info(f"Started response with instructions: {instructions}")
-        else:
-            logger.error("WebSocket is not open. Cannot start response.")
 
     def register_handler(self, message_type: str, handler: Callable[[dict], asyncio.Future]):
         self.handlers[message_type] = handler
@@ -244,7 +225,7 @@ class AliyunRealtimeAudioTextClient:
         try:
             async for message in self.ws:
                 data = json.loads(message)
-                message_type = data.get("header", {}).get("name", "default")
+                message_type = data.get("header", {}).get("status", "default")
                 handler = self.handlers.get(message_type, self.handlers.get("default"))
                 if handler:
                     await handler(data)

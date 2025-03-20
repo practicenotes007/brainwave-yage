@@ -10,3 +10,4 @@ pytest
 pytest-asyncio
 pytest-mock
 httpx
+aliyun-python-sdk-core==2.15.1
