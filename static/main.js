@@ -242,7 +242,7 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('DOMContentLoaded', () => {
     initializeWebSocket();
     initializeTheme();
-    if (autoStart) initializeAudioStream();
+    if (autoStart) startRecording();
 });
 // Readability and AI handlers
 readabilityButton.onclick = async () => {
