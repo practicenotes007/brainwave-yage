@@ -47,13 +47,23 @@ class AskAIResponse(BaseModel):
 
 app = FastAPI()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    logger.error("OPENAI_API_KEY is not set in environment variables.")
-    raise EnvironmentError("OPENAI_API_KEY is not set.")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+if not DEEPSEEK_API_KEY:
+    logger.error("DEEPSEEK_API_KEY is not set in environment variables.")
+    raise EnvironmentError("DEEPSEEK_API_KEY is not set.")
+
+ALIYUN_API_KEY = os.getenv("ALIYUN_API_KEY")
+if not ALIYUN_API_KEY:
+    logger.error("ALIYUN_API_KEY is not set in environment variables.")
+    raise EnvironmentError("ALIYUN_API_KEY is not set.")
+
+ALIYUN_APP_KEY = os.getenv("ALIYUN_APP_KEY")
+if not ALIYUN_APP_KEY:
+    logger.error("ALIYUN_APP_KEY is not set in environment variables.")
+    raise EnvironmentError("ALIYUN_APP_KEY is not set.")
 
 # Initialize with a default model
-llm_processor = get_llm_processor("gpt-4o")  # Default processor
+llm_processor = get_llm_processor("deepseek-chat")  # Default processor
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
