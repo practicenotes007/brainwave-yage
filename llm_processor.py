@@ -132,8 +132,7 @@ class DeepSeekProcessor(LLMProcessor):
                     if line.strip():
                         yield line.strip()
         except httpx.ConnectError as e:
-            logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url} - {str(e)}")
-            logger.error("Please verify network connectivity and DNS resolution for 'api.deepseek.ai'")
+            logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url}. Error: {str(e)}. Please check DNS resolution (run 'nslookup api.deepseek.ai') and network connectivity.")
             yield f"Connection error: {str(e)}"
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error {e.response.status_code} from {e.request.url}: {e.response.text}")
@@ -161,8 +160,7 @@ class DeepSeekProcessor(LLMProcessor):
             response.raise_for_status()
             return response.json()["choices"][0]["text"]
         except httpx.ConnectError as e:
-            logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url} - {str(e)}")
-            logger.error("Please verify network connectivity and DNS resolution for 'api.deepseek.ai'")
+            logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url}. Error: {str(e)}. Please check DNS resolution (run 'nslookup api.deepseek.ai') and network connectivity.")
             return f"Connection error: {str(e)}"
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error (sync): {e.response.status_code} from {e.request.url} - {e.response.text}")
