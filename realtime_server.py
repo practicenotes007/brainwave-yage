@@ -350,7 +350,7 @@ async def enhance_readability(request: ReadabilityRequest):
     try:
         async def text_generator():
             # Use gpt-4o specifically for readability
-            async for part in llm_processor.process_text(request.text, prompt):
+            async for part in llm_processor.process_text(request.text, prompt, model="gpt-4o"):
                 yield part
 
         return StreamingResponse(text_generator(), media_type="text/plain")
@@ -372,7 +372,7 @@ def ask_ai(request: AskAIRequest):
 
     try:
         # Use o1-mini specifically for ask_ai
-        answer = llm_processor.process_text_sync(request.text, prompt)
+        answer = llm_processor.process_text_sync(request.text, prompt, model="o1-mini")
         return AskAIResponse(answer=answer)
     except Exception as e:
         logger.error(f"Error processing AI question: {e}", exc_info=True)
@@ -392,7 +392,7 @@ async def check_correctness(request: CorrectnessRequest):
     try:
         async def text_generator():
             # Specifically use gpt-4o for correctness checking
-            async for part in llm_processor.process_text(request.text, prompt):
+            async for part in llm_processor.process_text(request.text, prompt, model="gpt-4o"):
                 yield part
 
         return StreamingResponse(text_generator(), media_type="text/plain")

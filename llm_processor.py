@@ -100,7 +100,7 @@ class GPTProcessor(LLMProcessor):
 大模型服务为 DeepSeek，具体实现
 '''
 class DeepSeekProcessor(LLMProcessor):
-    def __init__(self, default_model: str = 'deepseek-chat'):
+    def __init__(self, default_model: str = 'deepseek-chat'):  # 修改默认模型为deepseek-chat
         self.default_model = default_model
         self.api_key = os.getenv("DEEPSEEK_API_KEY")
         if not self.api_key:
@@ -123,7 +123,7 @@ class DeepSeekProcessor(LLMProcessor):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    "https://api.deepseek.com/v1/completions",  # 修改API地址为.com域名
+                    "https://api.deepseek.com/beta/v1/completions",  # 修改API地址为beta路径
                     json=payload,
                     headers=headers
                 )
@@ -153,7 +153,7 @@ class DeepSeekProcessor(LLMProcessor):
 
         try:
             response = httpx.post(
-                "https://api.deepseek.com/v1/completions",  # 修改API地址为.com域名
+                "https://api.deepseek.com/beta/v1/completions",  # 修改API地址为beta路径
                 json=payload,
                 headers=headers
             )
