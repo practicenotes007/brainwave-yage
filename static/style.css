@@ -28,7 +28,7 @@ h1 {
     width: 100px;
     height: 100px;
     border-radius: 50%;
-    background-color: #007AFF;
+    background-color: #a7b1bb;
     border: none;
     cursor: pointer;
     margin: 20px auto;
@@ -44,7 +44,7 @@ h1 {
 }
 
 #recordButton.recording {
-    background-color: #FF3B30;
+    background-color: #f1665f;
     animation: pulse 2s infinite;
 }
 
