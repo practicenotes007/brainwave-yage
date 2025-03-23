@@ -350,7 +350,7 @@ async def enhance_readability(request: ReadabilityRequest):
     try:
         async def text_generator():
             # Use gpt-4o specifically for readability
-            async for part in llm_processor.process_text(request.text, prompt, model="gpt-4o"):
+            async for part in llm_processor.process_text(request.text, prompt):
                 yield part
 
         return StreamingResponse(text_generator(), media_type="text/plain")
@@ -392,7 +392,7 @@ async def check_correctness(request: CorrectnessRequest):
     try:
         async def text_generator():
             # Specifically use gpt-4o for correctness checking
-            async for part in llm_processor.process_text(request.text, prompt, model="gpt-4o"):
+            async for part in llm_processor.process_text(request.text, prompt):
                 yield part
 
         return StreamingResponse(text_generator(), media_type="text/plain")
