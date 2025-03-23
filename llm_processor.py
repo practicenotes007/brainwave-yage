@@ -123,7 +123,7 @@ class DeepSeekProcessor(LLMProcessor):
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.post(
-                    "https://api.deepseek.ai/v1/completions",  # 标记API地址来源
+                    "https://api.deepseek.com/v1/completions",  # 修改API地址为.com域名
                     json=payload,
                     headers=headers
                 )
@@ -153,7 +153,7 @@ class DeepSeekProcessor(LLMProcessor):
 
         try:
             response = httpx.post(
-                "https://api.deepseek.ai/v1/completions",  # 标记API地址来源
+                "https://api.deepseek.com/v1/completions",  # 修改API地址为.com域名
                 json=payload,
                 headers=headers
             )
@@ -168,11 +168,16 @@ class DeepSeekProcessor(LLMProcessor):
 
 def get_llm_processor(model: str) -> LLMProcessor:
     model = model.lower()
+    logger.debug(f"Creating processor for model: {model}")  # 添加日志记录模型选择过程
     if model.startswith(('gemini', 'gemini-')):
+        logger.debug("Selected GeminiProcessor")
         return GeminiProcessor(default_model=model)
     elif model.startswith(('gpt-', 'o1-')):
+        logger.debug("Selected GPTProcessor")
         return GPTProcessor()
     elif model.startswith('deepseek'):
+        logger.debug("Selected DeepSeekProcessor")
         return DeepSeekProcessor(default_model=model)
     else:
+        logger.error(f"Unsupported model type: {model}")
         raise ValueError(f"Unsupported model type: {model}")
