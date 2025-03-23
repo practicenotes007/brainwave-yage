@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
+    filename='brainwave.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -401,4 +402,4 @@ async def check_correctness(request: CorrectnessRequest):
         raise HTTPException(status_code=500, detail="Error processing correctness check.")
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=3005)
+    uvicorn.run(app, host="0.0.0.0", port=3005,proxy_headers=True)

@@ -5,6 +5,8 @@ from openai import OpenAI, AsyncOpenAI
 from typing import AsyncGenerator, Generator, Optional
 import logging
 
+import httpx  # 新增导入语句以修复httpx未定义错误
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -118,11 +120,19 @@ class DeepSeekProcessor(LLMProcessor):
             "stream": True
         }
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post("https://api.deepseek.ai/v1/completions", json=payload, headers=headers)
-            async for line in response.aiter_lines():
-                if line.strip():
-                    yield line.strip()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post("https://api.deepseek.ai/v1/completions", json=payload, headers=headers)
+                response.raise_for_status()  # 新增：检查HTTP状态码
+                async for line in response.aiter_lines():
+                    if line.strip():
+                        yield line.strip()
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error to DeepSeek API: {str(e)}")
+            yield f"Connection error: {str(e)}"  # 返回错误信息给客户端
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error {e.response.status_code}: {e.response.text}")
+            yield f"API error: {e.response.status_code} - {e.response.text}"
 
     def process_text_sync(self, text: str, prompt: str, model: Optional[str] = None) -> str:
         all_prompt = f"{prompt}\n\n{text}"
@@ -137,8 +147,17 @@ class DeepSeekProcessor(LLMProcessor):
             "max_tokens": 512
         }
 
-        response = httpx.post("https://api.deepseek.ai/v1/completions", json=payload, headers=headers)
-        return response.json()["choices"][0]["text"]
+        try:
+            response = httpx.post("https://api.deepseek.ai/v1/completions", json=payload, headers=headers)
+            response.raise_for_status()
+            return response.json()["choices"][0]["text"]
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error to DeepSeek API (sync): {str(e)}")
+            return f"Connection error: {str(e)}"
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error (sync): {e.response.status_code} - {e.response.text}")
+            return f"API error: {e.response.status_code} - {e.response.text}"
+
 def get_llm_processor(model: str) -> LLMProcessor:
     model = model.lower()
     if model.startswith(('gemini', 'gemini-')):
