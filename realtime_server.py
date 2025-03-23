@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     filename='brainwave.log',
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
@@ -64,7 +64,7 @@ if not ALIYUN_APP_KEY:
     raise EnvironmentError("ALIYUN_APP_KEY is not set.")
 
 # Initialize with a default model
-llm_processor = get_llm_processor("deepseek-chat")  # Default processor
+llm_processor = get_llm_processor("deepseek-chat-1.3")  # Default processor
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
