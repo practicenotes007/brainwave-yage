@@ -100,11 +100,13 @@ class GPTProcessor(LLMProcessor):
 大模型服务为 DeepSeek，具体实现
 '''
 class DeepSeekProcessor(LLMProcessor):
-    def __init__(self, default_model: str = 'deepseek-chat'):  # 修改默认模型为deepseek-chat
+    def __init__(self, default_model: str = 'deepseek-chat'):
         self.default_model = default_model
         self.api_key = os.getenv("DEEPSEEK_API_KEY")
         if not self.api_key:
             raise EnvironmentError("DEEPSEEK_API_KEY is not set")
+        # 增加超时设置
+        self.timeout = httpx.Timeout(30.0, connect=10.0)  # 总超时30秒，连接超时10秒
 
     async def process_text(self, text: str, prompt: str, model: Optional[str] = None) -> AsyncGenerator[str, None]:
         all_prompt = f"{prompt}\n\n{text}"
@@ -121,9 +123,9 @@ class DeepSeekProcessor(LLMProcessor):
         }
 
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:  # 应用超时设置
                 response = await client.post(
-                    "https://api.deepseek.com/beta/v1/completions",  # 修改API地址为beta路径
+                    "https://api.deepseek.com/beta/v1/completions",
                     json=payload,
                     headers=headers
                 )
@@ -134,6 +136,9 @@ class DeepSeekProcessor(LLMProcessor):
         except httpx.ConnectError as e:
             logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url}. Error: {str(e)}. Please check DNS resolution (run 'nslookup api.deepseek.ai') and network connectivity.")
             yield f"Connection error: {str(e)}"
+        except httpx.ReadTimeout as e:
+            logger.error(f"Read timeout occurred while processing request: {str(e)}")
+            yield "Request timed out. Please try again later."
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error {e.response.status_code} from {e.request.url}: {e.response.text}")
             yield f"API error: {e.response.status_code} - {e.response.text}"
@@ -153,15 +158,19 @@ class DeepSeekProcessor(LLMProcessor):
 
         try:
             response = httpx.post(
-                "https://api.deepseek.com/beta/v1/completions",  # 修改API地址为beta路径
+                "https://api.deepseek.com/beta/v1/completions",
                 json=payload,
-                headers=headers
+                headers=headers,
+                timeout=self.timeout  # 应用超时设置
             )
             response.raise_for_status()
             return response.json()["choices"][0]["text"]
         except httpx.ConnectError as e:
             logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url}. Error: {str(e)}. Please check DNS resolution (run 'nslookup api.deepseek.ai') and network connectivity.")
             return f"Connection error: {str(e)}"
+        except httpx.ReadTimeout as e:
+            logger.error(f"Read timeout occurred while processing request: {str(e)}")
+            return "Request timed out. Please try again later."
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error (sync): {e.response.status_code} from {e.request.url} - {e.response.text}")
             return f"API error: {e.response.status_code} - {e.response.text}"
