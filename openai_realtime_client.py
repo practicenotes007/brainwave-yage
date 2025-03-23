@@ -5,8 +5,6 @@ import logging
 import time
 from typing import Optional, Callable, Dict, List
 import asyncio
-from aliyunsdkcore.client import AcsClient
-from aliyunsdkcore.request import CommonRequest
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
