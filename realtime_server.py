@@ -372,7 +372,7 @@ def ask_ai(request: AskAIRequest):
 
     try:
         # Use o1-mini specifically for ask_ai
-        answer = llm_processor.process_text_sync(request.text, prompt, model="o1-mini")
+        answer = llm_processor.process_text_sync(request.text, prompt)
         return AskAIResponse(answer=answer)
     except Exception as e:
         logger.error(f"Error processing AI question: {e}", exc_info=True)
