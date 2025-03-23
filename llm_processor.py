@@ -122,16 +122,21 @@ class DeepSeekProcessor(LLMProcessor):
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post("https://api.deepseek.ai/v1/completions", json=payload, headers=headers)
-                response.raise_for_status()  # 新增：检查HTTP状态码
+                response = await client.post(
+                    "https://api.deepseek.ai/v1/completions",  # 标记API地址来源
+                    json=payload,
+                    headers=headers
+                )
+                response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line.strip():
                         yield line.strip()
         except httpx.ConnectError as e:
-            logger.error(f"Connection error to DeepSeek API: {str(e)}")
-            yield f"Connection error: {str(e)}"  # 返回错误信息给客户端
+            logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url} - {str(e)}")
+            logger.error("Please verify network connectivity and DNS resolution for 'api.deepseek.ai'")
+            yield f"Connection error: {str(e)}"
         except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error {e.response.status_code}: {e.response.text}")
+            logger.error(f"HTTP error {e.response.status_code} from {e.request.url}: {e.response.text}")
             yield f"API error: {e.response.status_code} - {e.response.text}"
 
     def process_text_sync(self, text: str, prompt: str, model: Optional[str] = None) -> str:
@@ -148,14 +153,19 @@ class DeepSeekProcessor(LLMProcessor):
         }
 
         try:
-            response = httpx.post("https://api.deepseek.ai/v1/completions", json=payload, headers=headers)
+            response = httpx.post(
+                "https://api.deepseek.ai/v1/completions",  # 标记API地址来源
+                json=payload,
+                headers=headers
+            )
             response.raise_for_status()
             return response.json()["choices"][0]["text"]
         except httpx.ConnectError as e:
-            logger.error(f"Connection error to DeepSeek API (sync): {str(e)}")
+            logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url} - {str(e)}")
+            logger.error("Please verify network connectivity and DNS resolution for 'api.deepseek.ai'")
             return f"Connection error: {str(e)}"
         except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error (sync): {e.response.status_code} - {e.response.text}")
+            logger.error(f"HTTP error (sync): {e.response.status_code} from {e.request.url} - {e.response.text}")
             return f"API error: {e.response.status_code} - {e.response.text}"
 
 def get_llm_processor(model: str) -> LLMProcessor:
