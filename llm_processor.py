@@ -100,8 +100,9 @@ class GPTProcessor(LLMProcessor):
 大模型服务为 DeepSeek，具体实现
 '''
 class DeepSeekProcessor(LLMProcessor):
-    def __init__(self, default_model: str = 'deepseek-chat'):
+    def __init__(self, default_model: str = 'deepseek-chat', llm_url: str = "https://api.deepseek.com/beta/v1/completions"):
         self.default_model = default_model
+        self.llm_url = llm_url
         self.api_key = os.getenv("DEEPSEEK_API_KEY")
         if not self.api_key:
             raise EnvironmentError("DEEPSEEK_API_KEY is not set")
@@ -125,7 +126,7 @@ class DeepSeekProcessor(LLMProcessor):
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:  # 应用超时设置
                 response = await client.post(
-                    "https://api.deepseek.com/beta/v1/completions",
+                    self.llm_url,
                     json=payload,
                     headers=headers
                 )
@@ -158,7 +159,7 @@ class DeepSeekProcessor(LLMProcessor):
 
         try:
             response = httpx.post(
-                "https://api.deepseek.com/beta/v1/completions",
+                self.llm_url,
                 json=payload,
                 headers=headers,
                 timeout=self.timeout  # 应用超时设置
@@ -186,7 +187,7 @@ def get_llm_processor(model: str) -> LLMProcessor:
         return GPTProcessor()
     elif model.startswith('deepseek'):
         logger.debug("Selected DeepSeekProcessor")
-        return DeepSeekProcessor(default_model=model)
+        return DeepSeekProcessor(default_model=model, llm_url = "https://dashscope.aliyuncs.com/compatible-mode/v1/completions")
     else:
         logger.error(f"Unsupported model type: {model}")
         raise ValueError(f"Unsupported model type: {model}")
