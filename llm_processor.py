@@ -118,7 +118,10 @@ class DeepSeekProcessor(LLMProcessor):
         headers = {"Authorization": f"Bearer {self.api_key}"}
         payload = {
             "model": model_name,
-            "prompt": all_prompt,
+            #"prompt": all_prompt,
+            "messages": [
+                {"role": "user", "content": all_prompt}
+            ],
             "max_tokens": 512,
             "stream": True
         }
@@ -153,8 +156,12 @@ class DeepSeekProcessor(LLMProcessor):
         headers = {"Authorization": f"Bearer {self.api_key}"}
         payload = {
             "model": model_name,
-            "prompt": all_prompt,
-            "max_tokens": 512
+            #"prompt": all_prompt,
+            "messages": [
+                {"role": "user", "content": all_prompt}
+            ],
+            "max_tokens": 512,
+            "stream": True
         }
 
         try:
