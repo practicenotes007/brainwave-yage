@@ -171,7 +171,8 @@ class DeepSeekProcessor(LLMProcessor):
                 timeout=self.timeout
             )
             response.raise_for_status()
-            return response.json()["choices"][0]["text"]
+            # 修改：根据阿里云格式调整JSON路径，从choices[0].text改为choices[0].message.content
+            return response.json()["choices"][0]["message"]["content"]
         except httpx.ConnectError as e:
             logger.error(f"Failed to connect to DeepSeek API endpoint: {e.request.url}. Error: {str(e)}. Please check DNS resolution (run 'nslookup api.deepseek.ai') and network connectivity.")
             return f"Connection error: {str(e)}"
@@ -182,7 +183,8 @@ class DeepSeekProcessor(LLMProcessor):
             logger.error(f"HTTP error (sync): {e.response.status_code} from {e.request.url} - {e.response.text}")
             return f"API error: {e.response.status_code} - {e.response.text}"
         except json.JSONDecodeError as e:
-            logger.error(f"JSON解析失败: {e}, 响应内容: {response.text[:100]}")  # 新增JSON解析异常处理
+            # 修改：增强日志记录，显示更多响应内容
+            logger.error(f"JSON解析失败: {e}, 响应内容: {response.text[:500]}")
             return f"响应格式错误: {e}"
 
 def get_llm_processor(model: str) -> LLMProcessor:
