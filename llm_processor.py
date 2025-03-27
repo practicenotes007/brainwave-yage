@@ -187,7 +187,7 @@ def get_llm_processor(model: str) -> LLMProcessor:
         return GPTProcessor()
     elif model.startswith('deepseek'):
         logger.debug("Selected DeepSeekProcessor")
-        return DeepSeekProcessor(default_model=model, llm_url = "https://dashscope.aliyuncs.com/compatible-mode/v1/completions")
+        return DeepSeekProcessor(default_model=model, llm_url = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions")
     else:
         logger.error(f"Unsupported model type: {model}")
         raise ValueError(f"Unsupported model type: {model}")
