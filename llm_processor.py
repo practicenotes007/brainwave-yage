@@ -156,12 +156,11 @@ class DeepSeekProcessor(LLMProcessor):
         headers = {"Authorization": f"Bearer {self.api_key}"}
         payload = {
             "model": model_name,
-            #"prompt": all_prompt,
             "messages": [
                 {"role": "user", "content": all_prompt}
             ],
             "max_tokens": 512,
-            "stream": True
+            "stream": False  # 修改：将stream参数设为False以获取完整响应
         }
 
         try:
@@ -169,7 +168,7 @@ class DeepSeekProcessor(LLMProcessor):
                 self.llm_url,
                 json=payload,
                 headers=headers,
-                timeout=self.timeout  # 应用超时设置
+                timeout=self.timeout
             )
             response.raise_for_status()
             return response.json()["choices"][0]["text"]
@@ -182,6 +181,9 @@ class DeepSeekProcessor(LLMProcessor):
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP error (sync): {e.response.status_code} from {e.request.url} - {e.response.text}")
             return f"API error: {e.response.status_code} - {e.response.text}"
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON解析失败: {e}, 响应内容: {response.text[:100]}")  # 新增JSON解析异常处理
+            return f"响应格式错误: {e}"
 
 def get_llm_processor(model: str) -> LLMProcessor:
     model = model.lower()
